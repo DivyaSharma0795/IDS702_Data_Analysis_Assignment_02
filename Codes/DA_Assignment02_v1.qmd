@@ -1,41 +1,41 @@
 ---
 title: "Data Analysis Assignment 02 - Resume Data"
-format: html
+format: pdf
 editor: visual
 jupyter: ir
 ---
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
+#| output: false
 #Importing Libraries
-library(dplyr)
-library(caret)
+library(dplyr, quietly = T)
+library(caret, quietly = T)
+library(irr, quietly = T)
+library(pROC, quietly = T)
+library(psych, quietly = T)
 #Reading the data
-library(openintro)
+library(openintro, quietly = T)
 data("resume")
 
 #Storing it in a dataframe called 'base_data'
 base_data <- resume
-```
-
-```{r}
-head(resume)
+# head(resume)
 print(nrow(base_data))
 print(ncol(base_data))
-```
-
-```{r, echo = FALSE}
 #glimpse(base_data)
-```
-
-```{r}
 
 ```
+
 
 # Model Documentation
 
-Research Question: How do race and gender influence job application callback rates?
+*Data Source and Dictionary:* [OpenIntro](https://www.openintro.org/data/index.php?data=resume)
 
-Since this is an inference problem - focus less on the model (ideally just take the coefficients from there) and focus more on the correlations between variables - scatter plots and such - create a table with variable - significance - coefficient - comment
+This experiment data comes from a study that sought to understand the influence of race and gender on job application callback rates. The study monitored job postings in Boston and Chicago for several months during 2001 and 2002 and used this to build up a set of test cases. Over this time period, the researchers randomly generating resumes to go out to a job posting, such as years of experience and education details, to create a realistic-looking resume. They then randomly assigned a name to the resume that would communicate the applicant's gender and race.
+
+**Research Question:** How do race and gender influence job application callback rates?
+
 
 ### 1. Overview
 
@@ -48,17 +48,37 @@ The resume data in the OpenIntro Library is a dataset of Resumes that were used 
 
 The dataset will be used to train a logistic regression model to predict the probability of receiving an interview invite, given the gender and socioeconomic class of the applicant.
 
+### 2. Data Cleaning and EDA
+
+#### 2.1: Data Cleaning
+For variables that are stored as numeric 0 and 1 but are actually flags (computer_skills, job_req_any etc) - converting them to factors before feeding this to the model. The variables include -
+
+* `gender` - Gender (male or Female)
+* `resume_quality` - Resume Quality (high or low)
+* `race` - Race (black or white)
+* `job_equal_opp_employer` - Whether the employer is an equal opportunity employer (0 or 1)
+* `job_fed_contractor` - Whether employer is a federal contractor (0 or 1)
+* `job_req_any` - Whether job has any requirements (0 or 1)
+* `job_req_communication` - Whether job requires communication skills (0 or 1)
+* `job_req_education` - Whether job requires education (0 or 1)
+* `job_req_computer` - Whether job requires computer skills (0 or 1)
+* `job_req_organization` - Whether job requires organization skills (0 or 1)
+* `honors` - Whether applicant has honors (0 or 1)
+* `worked_during_school` - Whether applicant worked during school (0 or 1)
+* `computer_skills` - Whether applicant has computer skills (0 or 1)
+* `special_skills` - Whether applicant has special skills (0 or 1)
+* `volunteer` - Whether applicant is a volunteer (0 or 1)
+* `military` - Whether applicant was in the military (0 or 1)
+* `employment_holes` - Whether applicant has any gaps in employment (0 or 1)
+* `has_email_address` - Whether resume has an email address (0 or 1)
+
 ```{r}
-library(ggplot2)
-plot_resume <- ggplot(resume, aes(gender, received_callback)) + 
-  geom_point() + facet_grid(. ~ job_type) + stat_smooth(method = "lm")
+#| echo: false
 
-plot_resume
-```
+#Converting factor variables to factors, filling missing data in job_req_min_experience 
+resume$job_req_min_experience <- ifelse(resume$job_req_min_experience == "", 0, resume$job_req_min_experience)
+resume$job_req_min_experience <- ifelse(resume$job_req_min_experience == "some", 0.5, resume$job_req_min_experience)
 
-### 2. Data Cleaning
-
-```{r}
 resume$gender_factors <- factor(resume$gender, levels = c("m", "f"))
 resume$resume_quality_factors <- factor(resume$resume_quality, levels = c("low", "high"))
 resume$race_factors <- factor(resume$race, levels = c("black", "white"))
@@ -80,19 +100,47 @@ resume$employment_holes <- as.factor(resume$employment_holes)
 resume$has_email_address <- as.factor(resume$has_email_address)
 ```
 
+
+#### 2.2: Exploratory Data Analysis (EDA)
+```{r}
+#| echo: false
+
+# Plotting the bar chart
+ggplot(resume, aes(x = race, fill = gender_factors)) +
+  geom_bar( ) +
+  labs(title = "Fig 2.1 Relationship between Gender and Received Callback", x = "Race", y = "#Calls") +
+  theme(legend.position = "bottom")+
+  scale_fill_discrete(name = "Gender", labels = c("Male", "Female"))
+```
+
+
+
 ### 3. Modeling
 
+We will be using this data to predict whether or not a callback was received, based on the provided data of job details, applicant details, and resume quality. This is an inference problem, so we are more interested in what variables are significant towards receiving a callback, rather than the accuracy of the model.
+
+*One major issue that we can face in this model is that of class imbalance, as only 392 out of 4,870 `(~8%)` job-resume combinations got a callback*
+
+Currently, Logistic Regression is a good choice for this problem due to a variety of reasons -
+
+-   Logistic Regression is a powerful tool for modeling the probability of a binary outcome
+-   It can be used to account for the effects of multiple independent variables on the outcome variable
+-   It is easier to interpret and explain to stakeholders
+
 ```{r}
+#| echo: false
+#| output: false
 set.seed(9482)
 sample <- sample(c(TRUE, FALSE), nrow(resume), replace=TRUE, prob=c(0.8,0.2))
 train <- resume[sample,]
 test <- resume[!sample,]
 
 model <- glm(received_callback~
-               #job_city+
-               #job_industry+
-               #job_type+
-               #resume_quality_factors+
+               job_city+
+               job_industry+
+               job_type+
+               job_req_min_experience+
+               resume_quality_factors+
                gender_factors+
                race_factors+
                years_college+
@@ -110,31 +158,82 @@ options(scipen=999)
 summary(model)
 
 resume$test_results <- predict(model, resume, type = 'response')
-table_mat <- table(resume$received_callback, test_results > 0.2)
-table_mat
+#table_mat <- table(resume$received_callback, test_results > 0.2)
+#table_mat
 
-precision <- function(matrix) {
+#precision <- function(matrix) {
 	# True positive
-    tp <- matrix[2, 2]
+#    tp <- matrix[2, 2]
 	# false positive
-    fp <- matrix[1, 2]
-    return (tp / (tp + fp))
-}
-print(precision(table_mat))
-recall <- function(matrix) {
+#    fp <- matrix[1, 2]
+#    return (tp / (tp + fp))
+#}
+#print(precision(table_mat))
+#recall <- function(matrix) {
 # true positive
-    tp <- matrix[2, 2]# false positive
-    fn <- matrix[2, 1]
-    return (tp / (tp + fn))
-}
-print(recall(table_mat))
+#    tp <- matrix[2, 2]# false positive
+#    fn <- matrix[2, 1]
+#    return (tp / (tp + fn))
+#}
+#print(recall(table_mat))
 
 
-library(caret)
 threshold <- 0.2
 confusionMatrix(factor(resume$test_results>threshold), factor(resume$received_callback==1), positive="TRUE")
+kappa2(resume[c('received_callback', 'test_results')])
 ```
+
 
 ### 4. Results
 
+Now that we have built a logistic regression model, we can assess the performance using the following metrics - 
+
+
+###### 4.1 Assessing Model Performance - APR Metrics
+
+```{r}
+#| echo: false
+
+# Converting the predicted probabilities to binary predictions
+resume$predicted_classes <- factor(ifelse(resume$test_results > 0.15, 1, 0), levels = c(0, 1))
+resume$actual_classes <- factor(ifelse(resume$received_callback == 1, 1, 0), levels = c(0, 1))
+# Calculating the accuracy
+confusion_matrix <- confusionMatrix(factor(resume$predicted_classes), factor(resume$actual_classes), positive = "1")
+
+accuracy <- confusionMatrix(factor(resume$predicted_classes), factor(resume$actual_classes), positive = "1")$overall["Accuracy"]
+precision <- confusion_matrix$byClass["Pos Pred Value"]
+recall <- confusion_matrix$byClass["Sensitivity"]
+acc <- confusion_matrix$byClass["Accuracy"]
+ckappa <- cohen.kappa(x=cbind(resume$predicted_classes,resume$actual_classes))[1]
+
+#ckappa[1]
+#cohen.kappa(x=cbind(resume$predicted_classes,resume$actual_classes))[1]
+print(paste("Accuracy:", round(accuracy, 2)))
+print(paste("Precision:", round(precision, 2)))
+print(paste("Recall/Sensitivity:", round(recall, 2)))
+print(paste("Kappa:", ckappa[1]))
+
+```
+  * `Accuracy`: A model with an accuracy of **0.87** predicts the correct outcome **87%** of the time. *Note that Accuracy is not a good measure of model performance due to class imbalance*
+  * `Precision`: A precision of **0.19** predicts the positive outcome correctly **19%** of the time when it predicts a positive outcome.
+  * `Recall`: A model with a recall of **0.2** correctly identifies **20%** of the positive cases.
+  * `Kappa`: A model with a kappa of **0.12** has a fair agreement between the predicted and actual outcomes, after accounting for the possibility of agreement occurring by chance.
+
+###### 4.2 Assessing Model Performance - ROC Curve
+```{r}
+#| echo: false
+#| messages: false
+# Calculating the ROC curve
+roc_curve <- roc(resume$received_callback, resume$test_results)
+# Plotting the ROC curve
+plot(roc_curve, main = "Plot 4.1: ROC Curve for GLM Model", print.auc = TRUE)
+```
+
+An ROC of > 0.5 means that the model is better at predicting than chance. An ROC of 0.658 indicates that the model is able to predict the probability of a callback with reasonable accuracy.
+
+
 ### 5. Future Work
+
+While the model can infer the most significant factors that resulted in recieving a callback, moving forward we can fix the class imbalance issue by using sampling methods.
+
+This will lead to a better model that can predict whether a job-resume combination will get a callback or not

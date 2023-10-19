@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Data Analysis Assignment 02 - Resume Data</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="DA_Assignment02_v1_files/libs/clipboard/clipboard.min.js"></script>
+<script src="DA_Assignment02_v1_files/libs/quarto-html/quarto.js"></script>
+<script src="DA_Assignment02_v1_files/libs/quarto-html/popper.min.js"></script>
+<script src="DA_Assignment02_v1_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="DA_Assignment02_v1_files/libs/quarto-html/anchor.min.js"></script>
+<link href="DA_Assignment02_v1_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="DA_Assignment02_v1_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="DA_Assignment02_v1_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="DA_Assignment02_v1_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="DA_Assignment02_v1_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Data Analysis Assignment 02 - Resume Data</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="model-documentation" class="level1">
+<h1>Model Documentation</h1>
+<p><em>Data Source and Dictionary:</em> <a href="https://www.openintro.org/data/index.php?data=resume">OpenIntro</a></p>
+<p>This experiment data comes from a study that sought to understand the influence of race and gender on job application callback rates. The study monitored job postings in Boston and Chicago for several months during 2001 and 2002 and used this to build up a set of test cases. Over this time period, the researchers randomly generating resumes to go out to a job posting, such as years of experience and education details, to create a realistic-looking resume. They then randomly assigned a name to the resume that would communicate the applicant’s gender and race.</p>
+<p><strong>Research Question:</strong> How do race and gender influence job application callback rates?</p>
+<section id="overview" class="level3">
+<h3 class="anchored" data-anchor-id="overview">1. Overview</h3>
+<p>The resume data in the OpenIntro Library is a dataset of Resumes that were used to apply for job profiles, and whether or not they recieved a callback. The resume dataset contains the following fields -</p>
+<ul>
+<li><em>Job Details</em> - These include details such as City, Industry, Job Title, Private/Non Profit, required education, and required skills</li>
+<li><em>Applicant Details</em> - Details about the applicant, such as Gender, Race, years of education, college degree, skills, and years of experience</li>
+<li><em>Resume Details</em> - Details about the resume, such Email available, Resume Quality</li>
+<li><em>Callback</em> - whether the applicant received a call back for this job posting for their resume (1 or 0) - this will be the <em>dependent variable</em></li>
+</ul>
+<p>The dataset will be used to train a logistic regression model to predict the probability of receiving an interview invite, given the gender and socioeconomic class of the applicant.</p>
+</section>
+<section id="data-cleaning-and-eda" class="level3">
+<h3 class="anchored" data-anchor-id="data-cleaning-and-eda">2. Data Cleaning and EDA</h3>
+<section id="data-cleaning" class="level4">
+<h4 class="anchored" data-anchor-id="data-cleaning">2.1: Data Cleaning</h4>
+<p>For variables that are stored as numeric 0 and 1 but are actually flags (computer_skills, job_req_any etc) - converting them to factors before feeding this to the model. The variables include -</p>
+<ul>
+<li><code>gender</code> - Gender (male or Female)</li>
+<li><code>resume_quality</code> - Resume Quality (high or low)</li>
+<li><code>race</code> - Race (black or white)</li>
+<li><code>job_equal_opp_employer</code> - Whether the employer is an equal opportunity employer (0 or 1)</li>
+<li><code>job_fed_contractor</code> - Whether employer is a federal contractor (0 or 1)</li>
+<li><code>job_req_any</code> - Whether job has any requirements (0 or 1)</li>
+<li><code>job_req_communication</code> - Whether job requires communication skills (0 or 1)</li>
+<li><code>job_req_education</code> - Whether job requires education (0 or 1)</li>
+<li><code>job_req_computer</code> - Whether job requires computer skills (0 or 1)</li>
+<li><code>job_req_organization</code> - Whether job requires organization skills (0 or 1)</li>
+<li><code>honors</code> - Whether applicant has honors (0 or 1)</li>
+<li><code>worked_during_school</code> - Whether applicant worked during school (0 or 1)</li>
+<li><code>computer_skills</code> - Whether applicant has computer skills (0 or 1)</li>
+<li><code>special_skills</code> - Whether applicant has special skills (0 or 1)</li>
+<li><code>volunteer</code> - Whether applicant is a volunteer (0 or 1)</li>
+<li><code>military</code> - Whether applicant was in the military (0 or 1)</li>
+<li><code>employment_holes</code> - Whether applicant has any gaps in employment (0 or 1)</li>
+<li><code>has_email_address</code> - Whether resume has an email address (0 or 1)</li>
+</ul>
+</section>
+<section id="exploratory-data-analysis-eda" class="level4">
+<h4 class="anchored" data-anchor-id="exploratory-data-analysis-eda">2.2: Exploratory Data Analysis (EDA)</h4>
+<div class="cell" data-execution_count="3">
+<div class="cell-output cell-output-display">
+<p><img src="DA_Assignment02_v1_files/figure-html/cell-4-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="modeling" class="level3">
+<h3 class="anchored" data-anchor-id="modeling">3. Modeling</h3>
+<p>We will be using this data to predict whether or not a callback was received, based on the provided data of job details, applicant details, and resume quality. This is an inference problem, so we are more interested in what variables are significant towards receiving a callback, rather than the accuracy of the model.</p>
+<p><em>One major issue that we can face in this model is that of class imbalance, as only 392 out of 4,870 <code>(~8%)</code> job-resume combinations got a callback</em></p>
+<p>Currently, Logistic Regression is a good choice for this problem due to a variety of reasons -</p>
+<ul>
+<li>Logistic Regression is a powerful tool for modeling the probability of a binary outcome</li>
+<li>It can be used to account for the effects of multiple independent variables on the outcome variable</li>
+<li>It is easier to interpret and explain to stakeholders</li>
+</ul>
+</section>
+<section id="results" class="level3">
+<h3 class="anchored" data-anchor-id="results">4. Results</h3>
+<p>Now that we have built a logistic regression model, we can assess the performance using the following metrics -</p>
+<section id="assessing-model-performance---apr-metrics" class="level6">
+<h6 class="anchored" data-anchor-id="assessing-model-performance---apr-metrics">4.1 Assessing Model Performance - APR Metrics</h6>
+<div class="cell" data-execution_count="5">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Accuracy: 0.87"
+[1] "Precision: 0.19"
+[1] "Recall/Sensitivity: 0.2"
+[1] "Kappa: 0.122426661470904"</code></pre>
+</div>
+</div>
+<ul>
+<li><code>Accuracy</code>: A model with an accuracy of <strong>0.87</strong> predicts the correct outcome <strong>87%</strong> of the time. <em>Note that Accuracy is not a good measure of model performance due to class imbalance</em></li>
+<li><code>Precision</code>: A precision of <strong>0.19</strong> predicts the positive outcome correctly <strong>19%</strong> of the time when it predicts a positive outcome.</li>
+<li><code>Recall</code>: A model with a recall of <strong>0.2</strong> correctly identifies <strong>20%</strong> of the positive cases.</li>
+<li><code>Kappa</code>: A model with a kappa of <strong>0.12</strong> has a fair agreement between the predicted and actual outcomes, after accounting for the possibility of agreement occurring by chance.</li>
+</ul>
+</section>
+<section id="assessing-model-performance---roc-curve" class="level6">
+<h6 class="anchored" data-anchor-id="assessing-model-performance---roc-curve">4.2 Assessing Model Performance - ROC Curve</h6>
+<div class="cell" data-execution_count="6">
+<div class="cell-output cell-output-stderr">
+<pre><code>Setting levels: control = 0, case = 1
+
+Setting direction: controls &lt; cases
+</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="DA_Assignment02_v1_files/figure-html/cell-7-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>An ROC of &gt; 0.5 means that the model is better at predicting than chance. An ROC of 0.658 indicates that the model is able to predict the probability of a callback with reasonable accuracy.</p>
+</section>
+</section>
+<section id="future-work" class="level3">
+<h3 class="anchored" data-anchor-id="future-work">5. Future Work</h3>
+<p>While the model can infer the most significant factors that resulted in recieving a callback, moving forward we can fix the class imbalance issue by using sampling methods.</p>
+<p>This will lead to a better model that can predict whether a job-resume combination will get a callback or not</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
