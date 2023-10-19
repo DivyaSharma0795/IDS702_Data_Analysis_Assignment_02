@@ -1,1 +1,16 @@
+---
+title: "Data Analysis Assignment 02 - Resume Data"
+author: "Divya Sharma (ds655)"
+format: html
+editor: visual
+jupyter: ir
+---
 
+```{r}
+#Reading the data
+library(openintro)
+data("resume")
+
+#Storing it in a dataframe called 'base_data'
+base_data <- resume
+```
