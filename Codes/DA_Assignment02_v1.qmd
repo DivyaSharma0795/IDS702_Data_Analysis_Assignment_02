@@ -5,7 +5,7 @@ editor: visual
 jupyter: ir
 ---
 
-```{r}
+```{r, echo=FALSE}
 #Importing Libraries
 library(dplyr)
 library(caret)
@@ -23,8 +23,8 @@ print(nrow(base_data))
 print(ncol(base_data))
 ```
 
-```{r}
-glimpse(base_data)
+```{r, echo = FALSE}
+#glimpse(base_data)
 ```
 
 ```{r}
@@ -34,6 +34,8 @@ glimpse(base_data)
 # Model Documentation
 
 Research Question: How do race and gender influence job application callback rates?
+
+Since this is an inference problem - focus less on the model (ideally just take the coefficients from there) and focus more on the correlations between variables - scatter plots and such - create a table with variable - significance - coefficient - comment
 
 ### 1. Overview
 
@@ -45,6 +47,14 @@ The resume data in the OpenIntro Library is a dataset of Resumes that were used 
 -   *Callback* - whether the applicant received a call back for this job posting for their resume (1 or 0) - this will be the *dependent variable*
 
 The dataset will be used to train a logistic regression model to predict the probability of receiving an interview invite, given the gender and socioeconomic class of the applicant.
+
+```{r}
+library(ggplot2)
+plot_resume <- ggplot(resume, aes(gender, received_callback)) + 
+  geom_point() + facet_grid(. ~ job_type) + stat_smooth(method = "lm")
+
+plot_resume
+```
 
 ### 2. Data Cleaning
 
@@ -71,6 +81,59 @@ resume$has_email_address <- as.factor(resume$has_email_address)
 ```
 
 ### 3. Modeling
+
+```{r}
+set.seed(9482)
+sample <- sample(c(TRUE, FALSE), nrow(resume), replace=TRUE, prob=c(0.8,0.2))
+train <- resume[sample,]
+test <- resume[!sample,]
+
+model <- glm(received_callback~
+               #job_city+
+               #job_industry+
+               #job_type+
+               #resume_quality_factors+
+               gender_factors+
+               race_factors+
+               years_college+
+               college_degree+
+               honors+
+               worked_during_school+
+               years_experience+
+               computer_skills+
+               volunteer+
+               military+
+               employment_holes+
+               has_email_address
+             , family="binomial", data=resume)
+options(scipen=999)
+summary(model)
+
+resume$test_results <- predict(model, resume, type = 'response')
+table_mat <- table(resume$received_callback, test_results > 0.2)
+table_mat
+
+precision <- function(matrix) {
+	# True positive
+    tp <- matrix[2, 2]
+	# false positive
+    fp <- matrix[1, 2]
+    return (tp / (tp + fp))
+}
+print(precision(table_mat))
+recall <- function(matrix) {
+# true positive
+    tp <- matrix[2, 2]# false positive
+    fn <- matrix[2, 1]
+    return (tp / (tp + fn))
+}
+print(recall(table_mat))
+
+
+library(caret)
+threshold <- 0.2
+confusionMatrix(factor(resume$test_results>threshold), factor(resume$received_callback==1), positive="TRUE")
+```
 
 ### 4. Results
 
