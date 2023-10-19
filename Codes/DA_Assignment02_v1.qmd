@@ -1,12 +1,14 @@
 ---
 title: "Data Analysis Assignment 02 - Resume Data"
-author: "Divya Sharma (ds655)"
 format: html
 editor: visual
 jupyter: ir
 ---
 
 ```{r}
+#Importing Libraries
+library(dplyr)
+library(caret)
 #Reading the data
 library(openintro)
 data("resume")
@@ -14,3 +16,62 @@ data("resume")
 #Storing it in a dataframe called 'base_data'
 base_data <- resume
 ```
+
+```{r}
+head(resume)
+print(nrow(base_data))
+print(ncol(base_data))
+```
+
+```{r}
+glimpse(base_data)
+```
+
+```{r}
+
+```
+
+# Model Documentation
+
+Research Question: How do race and gender influence job application callback rates?
+
+### 1. Overview
+
+The resume data in the OpenIntro Library is a dataset of Resumes that were used to apply for job profiles, and whether or not they recieved a callback. The resume dataset contains the following fields -
+
+-   *Job Details* - These include details such as City, Industry, Job Title, Private/Non Profit, required education, and required skills
+-   *Applicant Details* - Details about the applicant, such as Gender, Race, years of education, college degree, skills, and years of experience
+-   *Resume Details* - Details about the resume, such Email available, Resume Quality
+-   *Callback* - whether the applicant received a call back for this job posting for their resume (1 or 0) - this will be the *dependent variable*
+
+The dataset will be used to train a logistic regression model to predict the probability of receiving an interview invite, given the gender and socioeconomic class of the applicant.
+
+### 2. Data Cleaning
+
+```{r}
+resume$gender_factors <- factor(resume$gender, levels = c("m", "f"))
+resume$resume_quality_factors <- factor(resume$resume_quality, levels = c("low", "high"))
+resume$race_factors <- factor(resume$race, levels = c("black", "white"))
+resume$job_equal_opp_employer <- as.factor(resume$job_equal_opp_employer)
+resume$job_fed_contractor <- as.factor(resume$job_fed_contractor)
+resume$job_req_any <- as.factor(resume$job_req_any)
+resume$job_req_communication <- as.factor(resume$job_req_communication)
+resume$job_req_education <- as.factor(resume$job_req_education)
+resume$job_req_min_experience <- as.factor(resume$job_req_min_experience)
+resume$job_req_computer <- as.factor(resume$job_req_computer)
+resume$job_req_organization <- as.factor(resume$job_req_organization)
+resume$honors <- as.factor(resume$honors)
+resume$worked_during_school <- as.factor(resume$worked_during_school)
+resume$computer_skills <- as.factor(resume$computer_skills)
+resume$special_skills <- as.factor(resume$special_skills)
+resume$volunteer <- as.factor(resume$volunteer)
+resume$military <- as.factor(resume$military)
+resume$employment_holes <- as.factor(resume$employment_holes)
+resume$has_email_address <- as.factor(resume$has_email_address)
+```
+
+### 3. Modeling
+
+### 4. Results
+
+### 5. Future Work
