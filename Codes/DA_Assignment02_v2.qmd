@@ -1,6 +1,8 @@
 ---
 title: "Data Analysis Assignment 02 - Resume Data"
+subtitle: "Influence of Gender and Race on job application callbacks"
 format: pdf
+author: "Divya Sharma (ds655)"
 editor: visual
 jupyter: ir
 ---
@@ -14,6 +16,8 @@ library(caret, quietly = T)
 library(irr, quietly = T)
 library(pROC, quietly = T)
 library(psych, quietly = T)
+library(stargazer, quietly = T)
+
 #Reading the data
 library(openintro, quietly = T)
 data("resume")
@@ -44,9 +48,16 @@ The resume data in the OpenIntro Library is a dataset of Resumes that were used 
 -   *Resume Details* - Details about the resume, such Email available, Resume Quality
 -   *Callback* - whether the applicant received a call back for this job posting for their resume (1 or 0) - this will be the *dependent variable*
 
-The dataset will be used to train a logistic regression model to predict the probability of receiving an interview invite, given the gender and socioeconomic class of the applicant.
+The source data contains 4,870 rows and 30 columns. Out of 4,870 job-resume combinations, 392 received a callback. The dataset will be used to train a logistic regression model to predict the probability of receiving an interview invite, given the gender and socioeconomic class of the applicant.
 
 ### 2. Data Cleaning and EDA
+
+#### 2.1: Missing Values
+The 
+* The `job_req_min_experience` column contains 2,746 NULL values - this is 56% missing, however, only 156 of these postings have a requirement for education. We can assume that if they are missing this field then they are entry level jobs that do not require experience
+* The `job_fed_contractor` column has 1,768 (36%) NAs. 
+* The `job_ownership` column has 1.992 unknowns
+
 
 #### 2.1: Data Cleaning
 
@@ -70,6 +81,11 @@ For variables that are stored as numeric 0 and 1 but are actually flags (compute
 -   `military` - Whether applicant was in the military (0 or 1)
 -   `employment_holes` - Whether applicant has any gaps in employment (0 or 1)
 -   `has_email_address` - Whether resume has an email address (0 or 1)
+
+#### 2.2: Missing Values
+* `job_req_min_experience` - this column has values like 'some' and blanks. The 'some' have been replaced by 0.5 (minimum experience), and the blanks have been replaced by 0. 56% of the data (2,746 rows) have blanks, and 21% of the data (1,064 rows) has the value 'some'
+* `job_fed_contractor` - This column has 0s, 1s and NAs. 1,768 values are NAs which accounts for 36% of the data. The NAs have been replaced by 0s as we can assume majority of the jobs are not federal contractors
+
 
 ```{r}
 #| echo: false
@@ -99,7 +115,7 @@ resume$employment_holes <- as.factor(resume$employment_holes)
 resume$has_email_address <- as.factor(resume$has_email_address)
 ```
 
-#### 2.2: Exploratory Data Analysis (EDA)
+#### 2.3: Exploratory Data Analysis (EDA)
 
 EDA is done to examine the correlations between the predictor variables such as gender, race, resume details etc and the outcome variable which is received callback.
 
@@ -186,8 +202,16 @@ resume$test_results <- predict(model, resume, type = 'response')
 threshold <- 0.2
 confusionMatrix(factor(resume$test_results>threshold), factor(resume$received_callback==1), positive="TRUE")
 kappa2(resume[c('received_callback', 'test_results')])
-```
 
+```
+```{r}
+# Create a table of coefficients, standard errors, p-values, and confidence intervals
+library(stargazer)
+table <- stargazer(model, type = "table", header = FALSE, title = "Logistic Regression Results")
+
+# Print the table as LaTeX code
+cat(table)
+```
 ### 4. Results
 
 Now that we have built a logistic regression model, we can assess the performance using the following metrics -
@@ -222,6 +246,10 @@ print(paste("Kappa:", ckappa[1]))
 -   `Precision`: A precision of **0.19** predicts the positive outcome correctly **19%** of the time when it predicts a positive outcome.
 -   `Recall`: A model with a recall of **0.2** correctly identifies **20%** of the positive cases.
 -   `Kappa`: A model with a kappa of **0.12** has a fair agreement between the predicted and actual outcomes, after accounting for the possibility of agreement occurring by chance.
+
+```{r}
+confint(model)
+```
 
 ###### 4.2 Assessing Model Performance - ROC Curve
 
