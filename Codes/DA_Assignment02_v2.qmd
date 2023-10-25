@@ -5,6 +5,7 @@ format: pdf
 author: "Divya Sharma (ds655)"
 editor: visual
 jupyter: ir
+
 ---
 
 ```{r}
@@ -125,7 +126,7 @@ While looking at race, we observed that there were equal applications for black 
 
 ```{r}
 #| echo: false
-#| fig.width: 1
+#| fig.width: 3
 #| fig.height: 2
 # Plotting the bar chart
 ggplot(resume, aes(x = race, fill = gender_factors)) +
@@ -204,13 +205,29 @@ confusionMatrix(factor(resume$test_results>threshold), factor(resume$received_ca
 kappa2(resume[c('received_callback', 'test_results')])
 
 ```
-```{r}
+
+```{r, out.width=5}
+
 # Create a table of coefficients, standard errors, p-values, and confidence intervals
 library(stargazer)
-table <- stargazer(model, type = "table", header = FALSE, title = "Logistic Regression Results")
+coefficients_to_include <- c("predictor1", "predictor2")
+stargazer(model, 
+          title = "Logistic Regression Results", 
+          type = "text",
+          float = TRUE
+          )
+# library(broom)
+
+# Extract the coefficients and statistics
+# tidy_results <- tidy(model)
+# library(knitr)
+
+# Create a table
+# kable(tidy_results, format = "markdown")
+# table <- stargazer(model, type = "html", header = FALSE, title = "Logistic Regression Results")
 
 # Print the table as LaTeX code
-cat(table)
+# cat(table)
 ```
 ### 4. Results
 
@@ -247,7 +264,10 @@ print(paste("Kappa:", ckappa[1]))
 -   `Recall`: A model with a recall of **0.2** correctly identifies **20%** of the positive cases.
 -   `Kappa`: A model with a kappa of **0.12** has a fair agreement between the predicted and actual outcomes, after accounting for the possibility of agreement occurring by chance.
 
-```{r}
+```{r setup, warning=FALSE}
+#| echo: false
+#| messages: false
+#| warning: false
 confint(model)
 ```
 
