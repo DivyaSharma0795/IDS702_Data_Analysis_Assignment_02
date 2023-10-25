@@ -5,7 +5,7 @@ format: pdf
 author: "Divya Sharma (ds655)"
 editor: visual
 jupyter: ir
-
+geometry: margin = 0.5cm
 ---
 
 ```{r}
@@ -26,8 +26,8 @@ data("resume")
 #Storing it in a dataframe called 'base_data'
 base_data <- resume
 # head(resume)
-print(nrow(base_data))
-print(ncol(base_data))
+# print(nrow(base_data))
+# print(ncol(base_data))
 #glimpse(base_data)
 
 ```
@@ -54,11 +54,10 @@ The source data contains 4,870 rows and 30 columns. Out of 4,870 job-resume comb
 ### 2. Data Cleaning and EDA
 
 #### 2.1: Missing Values
-The 
-* The `job_req_min_experience` column contains 2,746 NULL values - this is 56% missing, however, only 156 of these postings have a requirement for education. We can assume that if they are missing this field then they are entry level jobs that do not require experience
-* The `job_fed_contractor` column has 1,768 (36%) NAs. 
-* The `job_ownership` column has 1.992 unknowns
 
+-   The `job_req_min_experience` column contains 2,746 NULL values - this is 56% missing, however, only 156 of these postings have a requirement for education. We can assume that if they are missing this field then they are entry level jobs that do not require experience
+-   The `job_fed_contractor` column has 1,768 (36%) NAs.
+-   The `job_ownership` column has 1.992 unknowns
 
 #### 2.1: Data Cleaning
 
@@ -84,9 +83,9 @@ For variables that are stored as numeric 0 and 1 but are actually flags (compute
 -   `has_email_address` - Whether resume has an email address (0 or 1)
 
 #### 2.2: Missing Values
-* `job_req_min_experience` - this column has values like 'some' and blanks. The 'some' have been replaced by 0.5 (minimum experience), and the blanks have been replaced by 0. 56% of the data (2,746 rows) have blanks, and 21% of the data (1,064 rows) has the value 'some'
-* `job_fed_contractor` - This column has 0s, 1s and NAs. 1,768 values are NAs which accounts for 36% of the data. The NAs have been replaced by 0s as we can assume majority of the jobs are not federal contractors
 
+-   `job_req_min_experience` - this column has values like 'some' and blanks. The 'some' have been replaced by 0.5 (minimum experience), and the blanks have been replaced by 0. 56% of the data (2,746 rows) have blanks, and 21% of the data (1,064 rows) has the value 'some'
+-   `job_fed_contractor` - This column has 0s, 1s and NAs. 1,768 values are NAs which accounts for 36% of the data. The NAs have been replaced by 0s as we can assume majority of the jobs are not federal contractors
 
 ```{r}
 #| echo: false
@@ -125,10 +124,8 @@ We observe that in gender, females received higher callbacks compared to males(3
 While looking at race, we observed that there were equal applications for black and white people, however, black people got callbacks `6.45%` times which is much much lower than that of white people (`9.65%`) times.
 
 ```{r}
-#| echo: false
-#| fig.width: 3
-#| fig.height: 2
-# Plotting the bar chart
+#|echo: false
+
 ggplot(resume, aes(x = race, fill = gender_factors)) +
   geom_bar() +
   labs(title = "Fig 2.1: Relationship between Gender and Received Callback", x = "Race", y = "#Calls") +
@@ -161,20 +158,20 @@ model <- glm(received_callback~
                job_city+
                job_industry+
                job_type+
-               job_req_min_experience+
-               resume_quality_factors+
+               #job_req_min_experience+
+               #resume_quality_factors+
                gender_factors+
                race_factors+
-               years_college+
-               college_degree+
+               #years_college+
+               #college_degree+
                honors+
-               worked_during_school+
+               #worked_during_school+
                years_experience+
                computer_skills+
-               volunteer+
-               military+
-               employment_holes+
-               has_email_address
+               #volunteer+
+               #military+
+               employment_holes
+               #has_email_address
              , family="binomial", data=resume)
 options(scipen=999)
 summary(model)
@@ -206,29 +203,41 @@ kappa2(resume[c('received_callback', 'test_results')])
 
 ```
 
-```{r, out.width=5}
+```{r}
+#|echo: false
+#|warning: false
 
-# Create a table of coefficients, standard errors, p-values, and confidence intervals
-library(stargazer)
-coefficients_to_include <- c("predictor1", "predictor2")
+# Use the new object in the stargazer function
 stargazer(model, 
-          title = "Logistic Regression Results", 
+          title = "Logistic Regression Results - Coefficient + Confidence Intervals @ 97.5% for variables", 
           type = "text",
-          float = TRUE
-          )
-# library(broom)
+          dep.var.labels=c("Callback Received"),
+          float = TRUE, single.row = TRUE,
+          ci = TRUE, ci.level = 0.98,
+          covariate.labels=c(
+            "Job City: Chicago",
+            "Job Industry: Finance/Insurance/Real Estate",
+            "Job Industry: Manufacturing",
+            "Job Industry: Other Service",
+            "Job Industry: Transportation/Communication",
+            "Job Industry: Wholesale and Retail Trade",
+            "Job Type: Manager",
+            "Job Type: Retail Sales",
+            "Job Type: Sales Rep",
+            "Job Type: Secretary",
+            "Job Type: Supervisor",
+            "Gender: F",
+            "Race: White",
+            "Has Honors: True",
+            "Has Years of experience: True",
+            "Has Computer Skills: True",
+            "Has Employment Holes: True",
+            "Constant"
+          ),
+          no.space = TRUE)
 
-# Extract the coefficients and statistics
-# tidy_results <- tidy(model)
-# library(knitr)
-
-# Create a table
-# kable(tidy_results, format = "markdown")
-# table <- stargazer(model, type = "html", header = FALSE, title = "Logistic Regression Results")
-
-# Print the table as LaTeX code
-# cat(table)
 ```
+
 ### 4. Results
 
 Now that we have built a logistic regression model, we can assess the performance using the following metrics -
@@ -242,21 +251,46 @@ Now that we have built a logistic regression model, we can assess the performanc
 resume$predicted_classes <- factor(ifelse(resume$test_results > 0.15, 1, 0), levels = c(0, 1))
 resume$actual_classes <- factor(ifelse(resume$received_callback == 1, 1, 0), levels = c(0, 1))
 # Calculating the accuracy
-confusion_matrix <- confusionMatrix(factor(resume$predicted_classes), factor(resume$actual_classes), positive = "1")
+#confusion_matrix <- confusionMatrix(factor(resume$predicted_classes), factor(resume$actual_classes), positive = "1")
 
-accuracy <- confusionMatrix(factor(resume$predicted_classes), factor(resume$actual_classes), positive = "1")$overall["Accuracy"]
-precision <- confusion_matrix$byClass["Pos Pred Value"]
-recall <- confusion_matrix$byClass["Sensitivity"]
-acc <- confusion_matrix$byClass["Accuracy"]
-ckappa <- cohen.kappa(x=cbind(resume$predicted_classes,resume$actual_classes))[1]
+#model_output_df <- data.frame(
+#  metric_name = c("Sensitivity", "precision", "recall", "f1-score"),
+#  value = c(confusion_matrix$byClass[1], 0.78, 0.92, 0.84)
+#)
+
+#accuracy <- confusionMatrix(factor(resume$predicted_classes), factor(resume$actual_classes), positive = "1")$overall["Accuracy"]
+#precision <- confusion_matrix$byClass["Pos Pred Value"]
+#recall <- confusion_matrix$byClass["Sensitivity"]
+#acc <- confusion_matrix$byClass["Accuracy"]
+#ckappa <- cohen.kappa(x=cbind(resume$predicted_classes,resume$actual_classes))[1]
 
 #ckappa[1]
 #cohen.kappa(x=cbind(resume$predicted_classes,resume$actual_classes))[1]
-print(paste("Accuracy:", round(accuracy, 2)))
-print(paste("Precision:", round(precision, 2)))
-print(paste("Recall/Sensitivity:", round(recall, 2)))
-print(paste("Kappa:", ckappa[1]))
+#print(paste("Accuracy:", round(accuracy, 2)))
+#print(paste("Precision:", round(precision, 2)))
+#print(paste("Recall/Sensitivity:", round(recall, 2)))
+#print(paste("Kappa:", ckappa[1]))
+#confusion_matrix$table
+#confusion_matrix$byClass
+```
 
+```{r}
+#| echo: False
+library(tibble)
+# Calculate the confusion matrix and performance metrics
+confusion_matrix <- confusionMatrix(resume$predicted_classes, resume$actual_classes)
+
+#print(confusion_matrix$table, digits = 2)
+#as.matrix(confusion_matrix, what = "classes")
+#as.matrix(confusion_matrix, what = "overall")
+
+ndf <- as.data.frame(rbind(
+    as.matrix(confusion_matrix, what = "classes"), 
+    as.matrix(confusion_matrix, what = "overall"))
+  )
+names(ndf) <- c('Value')
+ndf <- rownames_to_column(ndf, var = 'Metric')
+stargazer(ndf,type='text', summary=FALSE, colnames=TRUE)
 ```
 
 -   `Accuracy`: A model with an accuracy of **0.87** predicts the correct outcome **87%** of the time. *Note that Accuracy is not a good measure of model performance due to class imbalance*
@@ -268,12 +302,13 @@ print(paste("Kappa:", ckappa[1]))
 #| echo: false
 #| messages: false
 #| warning: false
-confint(model)
+#confint(model)
 ```
 
 ###### 4.2 Assessing Model Performance - ROC Curve
 
 ```{r}
+#| 
 #| echo: false
 #| messages: false
 # Calculating the ROC curve

@@ -102,14 +102,37 @@ threshold <- 0.2
 confusionMatrix(factor(resume$test_results>threshold), factor(resume$received_callback==1), positive="TRUE")
 kappa2(resume[c('received_callback', 'test_results')])
 
-# Create a table of coefficients, standard errors, p-values, and confidence intervals
 library(stargazer)
-coefficients_to_include <- c("predictor1", "predictor2")
+
+coef_list <- list(
+  c(model$coefficients["job_cityChicago"], model$coefficients["job_industrytransportation_communication"]),
+  c(model$coefficients["job_typemanager"], model$coefficients["job_typeretail_sales"]),
+  c(model$coefficients["job_typesales_rep"], model$coefficients["job_typesecretary"]),
+  c(model$coefficients["job_typesupervisor"], model$coefficients["race_factorswhite"]),
+  c(model$coefficients["honors1"], model$coefficients["employment_holes1"]),
+  c(model$coefficients["computer_skills1"], model$coefficients["(Intercept)"])
+)
+# coefficients_to_include <- c(
+#   "job_cityChicago", 
+#   "job_industrytransportation_communication",
+#   "job_typemanager",
+#   "job_typeretail_sales",
+#   "job_typesales_rep",
+#   "job_typesecretary",
+#   "job_typesupervisor",
+#   "race_factorswhite",
+#   "honors1",
+#   "employment_holes1",
+#   "computer_skills1",
+#   "Constant"
+#   )
 stargazer(model, 
           title = "Logistic Regression Results", 
           type = "text",
-          float = TRUE
-)
+          float = TRUE, single.row = TRUE,
+          ci = TRUE, ci.level = 0.98,
+          coef = coefficients_to_include,  # Include only specified coefficients
+          no.space = TRUE)
 
 
 # Converting the predicted probabilities to binary predictions
@@ -140,3 +163,25 @@ confint(model)
 roc_curve <- roc(resume$received_callback, resume$test_results)
 # Plotting the ROC curve
 plot(roc_curve, main = "Plot 4.1: ROC Curve for GLM Model", print.auc = TRUE)
+
+
+covariate.labels=c(
+  "Job City: Chicago",
+  "Job Industry: Finance/Insurance/Real Estate",
+  "Job Industry: Manufacturing",
+  "Job Industry: Other Service",
+  "Job Industry: Transportation/Communication",
+  "Job Industry: Wholesale and Retail Trade",
+  "Job Type: Manager",
+  "Job Type: Retail Sales",
+  "Job Type: Sales Rep",
+  "Job Type: Secretary",
+  "Job Type: Supervisor",
+  "Gender: F",
+  "Race: White",
+  "Has Honors: True",
+  "Has Years of experience: True",
+  "Has Computer Skills: True",
+  "Has Employment Holes: True",
+  "Constant"
+)
