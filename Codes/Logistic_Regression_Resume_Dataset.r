@@ -1,13 +1,13 @@
 #Importing Libraries
-library(dplyr, quietly = T)
-library(caret, quietly = T)
-library(irr, quietly = T)
-library(pROC, quietly = T)
-library(psych, quietly = T)
-library(stargazer, quietly = T)
+library(dplyr, quietly = TRUE)
+library(caret, quietly = TRUE)
+library(irr, quietly = TRUE)
+library(pROC, quietly = TRUE)
+library(psych, quietly = TRUE)
+library(stargazer, quietly = TRUE)
 
 #Reading the data
-library(openintro, quietly = T)
+library(openintro, quietly = TRUE)
 data("resume")
 
 #Storing it in a dataframe called 'base_data'
